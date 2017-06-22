@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yingjun.ssm.user.dao.UserDao">
+
+    <select id="queryByPhone" resultType="User">
+		SELECT *
+		FROM SYS_USER
+		WHERE 
+		phone= #{phone} limit 1
+	</select>
+
+    <select id="queryAll" resultType="User">
+		SELECT *
+		FROM SYS_USER
+		ORDER BY create_time DESC
+		limit #{offset},#{limit}
+	</select>
+
+
+    <update id="addScore">
+		UPDATE SYS_USER 
+		SET 
+		score = score + #{add}
+	</update>
+
+
+    <select id="get" parameterType="java.lang.Integer" resultType="User">
+		SELECT *
+		FROM SYSSYS_USER a
+		WHERE id = #{id}
+	</select>
+
+    <insert id="insert" parameterType="User" statementType="PREPARED" useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO SYS_USER(
+		id,
+		account,
+		password,
+		nickname,
+		phone,
+		email,
+		score,
+		last_login_ip,
+		login_count,
+		last_login_time,
+		create_time,
+		isEnable
+		)
+		VALUES (
+		#{id},
+		#{account},
+		#{password},
+		#{nickname},
+		#{phone},
+		#{email},
+		#{score},
+		#{lastLoginIp},
+		#{loginCount},
+		#{lastLoginTime},
+		#{createTime},
+		#{isEnable}
+		)
+	</insert>
+
+    <update id="update" parameterType="User" statementType="PREPARED">
+		UPDATE SYS_USER a SET
+		a.`account` = #{account},
+		a.`password` = #{password},
+		a.isEnable = #{isEnable}
+		WHERE a.`id` = #{id}
+	</update>
+
+    <update id="enable" parameterType="map" statementType="PREPARED">
+        UPDATE SYS_USER a SET
+        a.isEnable = #{isEnable}
+        WHERE 1 = 1
+        <if test="idList != null">
+            AND a.`id` in
+            <foreach collection="idList" item="item" open="(" separator="," close=")">#{item}</foreach>
+        </if>
+    </update>
+
+    <update id="resetPassword" parameterType="map" statementType="PREPARED">
+        UPDATE SYS_USER a SET
+        a.password = #{password}
+        WHERE 1 = 1
+        <if test="idList != null">
+            AND a.`id` in
+            <foreach collection="idList" item="item" open="(" separator="," close=")">#{item}</foreach>
+        </if>
+    </update>
+
+    <select id="findPaginationByAccount" parameterType="map" resultType="User">
+        SELECT *
+        FROM SYS_USER a
+        WHERE 1 = 1
+        <if test="account != null and account != '' ">
+            AND a.account like CONCAT('%',#{account},'%')
+        </if>
+        <if test="appId != null and appId != '' ">
+            AND EXISTS (SELECT 1
+            FROM SYS_USER_APP ua
+            WHERE ua.user_id = a.id
+            AND ua.app_id = #{appId})
+        </if>
+        ORDER BY a.createTime DESC
+    </select>
+
+    <select id="findByAccount" parameterType="map" resultType="User">
+        SELECT a.*
+        FROM SYS_USER a
+        WHERE 1 = 1
+        <if test="account != null and account != '' ">
+            AND a.account = #{account}
+        </if>
+    </select>
+
+    <!-- 通过用户名密码来验证登录用户名密码是否匹配 -->
+    <select id="authentication" parameterType="User" resultType="User">
+        SELECT a.*
+        FROM SYS_USER a
+        WHERE a.account = #{account} AND a.password = #{password}
+    </select>
+
+    <delete id="deleteById" parameterType="list" statementType="PREPARED">
+        DELETE FROM SYS_USER
+        <choose>
+            <when test="list == null or list.size() == 0">
+                WHERE 1 != 1
+            </when>
+            <when test="list.size() == 1">
+                WHERE `id` =
+                <foreach collection="list" item="id">#{id}</foreach>
+            </when>
+            <otherwise>
+                WHERE `id` in
+                <foreach collection="list" item="id" open="(" separator="," close=")">#{id}</foreach>
+            </otherwise>
+        </choose>
+    </delete>
+
+    <select id="findById" parameterType="map" resultType="User">
+        SELECT a.*
+        FROM SYS_USER a
+        WHERE 1 = 1
+        <if test="id != null and id != '' ">
+            AND a.id = #{id}
+        </if>
+    </select>
+</mapper>
